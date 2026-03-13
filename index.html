@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0908">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BP Programok">
+<title>Budapest Program Discovery</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg:        #0a0908;
+  --surface:   #131210;
+  --surface2:  #1c1a17;
+  --surface3:  #242118;
+  --border:    #2a2720;
+  --border2:   #3a3628;
+  --accent:    #d4a853;
+  --accent2:   #9a7535;
+  --accent3:   #f0c878;
+  --green:     #6b9e78;
+  --red:       #9e6b6b;
+  --blue:      #6b88b4;
+  --text:      #ede5d8;
+  --text2:     #b8ad9e;
+  --text3:     #756d60;
+  --text4:     #4a4438;
+  --tag-bg:    #1a1815;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ─── HEADER ─────────────────────────────────── */
+header {
+  padding: 12px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+
+.logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.logo em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--text3);
+  font-size: 0.75rem;
+  margin-left: 6px;
+}
+
+.header-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-icon {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  position: relative;
+}
+.btn-icon:hover { border-color: var(--accent2); color: var(--accent); }
+.btn-icon .badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 0.55rem;
+  font-family: 'DM Mono', monospace;
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 400;
+}
+
+.btn-search-main {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.btn-search-main:hover { background: var(--accent3); }
+.btn-search-main:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── FILTER BAR ─────────────────────────────── */
+.filter-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 18px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+
+.filter-chip {
+  flex-shrink: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+  white-space: nowrap;
+}
+.filter-chip:hover, .filter-chip.active {
+  background: rgba(212,168,83,0.1);
+  border-color: var(--accent2);
+  color: var(--accent);
+}
+.filter-chip.active { font-weight: 500; }
+
+.filter-sep {
+  flex-shrink: 0;
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+}
+
+/* ─── MAIN LAYOUT ────────────────────────────── */
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.panel-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  min-width: 0;
+}
+
+.panel-side {
+  width: 310px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── SEARCH CONFIG PANEL ────────────────────── */
+.search-config {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.config-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.config-row.single { grid-template-columns: 1fr; }
+.config-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+.config-field { display: flex; flex-direction: column; gap: 4px; }
+.config-label {
+  font-size: 0.67rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: 'DM Mono', monospace;
+}
+.config-input {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-family: 'Outfit', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.config-input:focus { border-color: var(--accent2); }
+.config-input::placeholder { color: var(--text4); }
+select.config-input option { background: var(--surface3); }
+
+/* Date multi-picker */
+.date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.date-btn {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  border-radius: 7px;
+  padding: 6px 2px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+}
+.date-btn .day-name { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; }
+.date-btn .day-num  { font-size: 0.88rem; font-weight: 400; display: block; margin-top: 1px; }
+.date-btn:hover { border-color: var(--accent2); color: var(--text2); }
+.date-btn.selected {
+  background: rgba(212,168,83,0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.date-btn.today .day-num { color: var(--accent3); }
+.date-btn.past { opacity: 0.3; pointer-events: none; }
+
+.week-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.week-label { font-size: 0.72rem; color: var(--text3); font-family: 'DM Mono', monospace; }
+.week-nav-btn {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.week-nav-btn:hover { border-color: var(--accent2); color: var(--accent); }
+
+/* Time range */
+.time-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.time-range span { font-size: 0.72rem; color: var(--text3); }
+
+/* ─── PROGRAM CARDS ──────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.82rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-count {
+  background: var(--surface2);
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-style: normal;
+}
+
+.cards-list { display: flex; flex-direction: column; gap: 10px; }
+
+.program-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 15px 16px;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.program-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--border2);
+  transition: background 0.2s;
+}
+.program-card:hover { border-color: var(--accent2); }
+.program-card:hover::before { background: var(--accent); }
+.program-card.liked::before { background: var(--green); }
+.program-card.disliked { opacity: 0.25; pointer-events: none; transform: scale(0.98); }
+.program-card.source-fb::before { background: var(--blue); }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  flex: 1;
+}
+.card-badges { display: flex; gap: 4px; align-items: flex-start; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+.badge {
+  font-size: 0.62rem;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.badge-program { background: rgba(212,168,83,0.1);  color: var(--accent); border: 1px solid rgba(212,168,83,0.2); }
+.badge-deal    { background: rgba(107,158,120,0.1); color: var(--green);  border: 1px solid rgba(107,158,120,0.2); }
+.badge-fb      { background: rgba(107,136,180,0.1); color: var(--blue);   border: 1px solid rgba(107,136,180,0.2); }
+.badge-ics     { background: rgba(107,136,180,0.07); color: #8aa8d4;       border: 1px solid rgba(107,136,180,0.15); }
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.meta-item {
+  font-size: 0.73rem;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.meta-item.highlight { color: var(--green); }
+
+.card-desc {
+  font-size: 0.8rem;
+  color: var(--text2);
+  line-height: 1.55;
+  margin-bottom: 9px;
+}
+
+.card-why {
+  font-size: 0.74rem;
+  color: var(--accent);
+  font-style: italic;
+  margin-bottom: 10px;
+  padding: 5px 9px;
+  background: rgba(212,168,83,0.05);
+  border-radius: 6px;
+  border-left: 2px solid var(--accent2);
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.card-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+.tag {
+  background: var(--tag-bg);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+}
+
+.card-actions { display: flex; gap: 6px; align-items: center; }
+.btn-link {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 5px 11px;
+  border-radius: 7px;
+  font-size: 0.73rem;
+  font-family: 'Outfit', sans-serif;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.btn-link:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-like {
+  background: rgba(107,158,120,0.08);
+  border: 1px solid rgba(107,158,120,0.25);
+  color: var(--green);
+  padding: 5px 11px;
+  border-radius: 7px;
+  font-size: 0.73rem;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-like:hover, .btn-like.active {
+  background: rgba(107,158,120,0.18);
+  border-color: var(--green);
+}
+.btn-dislike {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text4);
+  padding: 5px 8px;
+  border-radius: 7px;
+  font-size: 0.73rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+.btn-dislike:hover { color: var(--red); border-color: rgba(158,107,107,0.3); }
+
+/* ─── LOADING ─────────────────────────────────── */
+.loading-state {
+  display: none;
+  padding: 48px 20px;
+  text-align: center;
+}
+.loading-state.active { display: block; }
+.loading-orbs {
+  display: inline-flex;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+.loading-orbs span {
+  width: 9px; height: 9px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: orb-bounce 1.4s infinite ease-in-out;
+  opacity: 0.3;
+}
+.loading-orbs span:nth-child(1) { animation-delay: 0s; }
+.loading-orbs span:nth-child(2) { animation-delay: 0.2s; }
+.loading-orbs span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes orb-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.3; }
+  40% { transform: translateY(-10px); opacity: 1; }
+}
+.loading-steps { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.loading-step {
+  font-size: 0.74rem;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  transition: color 0.3s;
+}
+.loading-step.active { color: var(--accent); }
+.loading-step.done { color: var(--green); }
+.step-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text4);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.loading-step.active .step-dot { background: var(--accent); }
+.loading-step.done  .step-dot { background: var(--green); }
+
+.empty-state {
+  text-align: center;
+  padding: 48px 18px;
+  color: var(--text3);
+  font-size: 0.8rem;
+  line-height: 1.8;
+}
+.empty-icon {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  opacity: 0.3;
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* ─── SIDE PANEL ──────────────────────────────── */
+.side-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+.side-tab {
+  padding: 11px 14px;
+  font-size: 0.75rem;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.side-tab:hover { color: var(--text2); }
+.side-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.side-tab .cnt {
+  background: var(--surface2);
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  border-radius: 20px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.side-panel-content {
+  display: none;
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+}
+.side-panel-content.active { display: block; }
+
+/* ─── SAVED LIST ──────────────────────────────── */
+.saved-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 11px 13px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.saved-card:hover { border-color: var(--accent2); }
+.saved-title {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin-bottom: 4px;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+}
+.saved-meta {
+  font-size: 0.7rem;
+  color: var(--text3);
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+.saved-actions { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.todo-btn {
+  font-size: 0.68rem;
+  padding: 3px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text3);
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+.todo-btn.done {
+  background: rgba(107,158,120,0.1);
+  border-color: rgba(107,158,120,0.3);
+  color: var(--green);
+}
+.todo-btn:hover:not(.done) { border-color: var(--accent); color: var(--accent); }
+.remove-btn {
+  margin-left: auto;
+  font-size: 0.7rem;
+  padding: 3px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  border: none;
+  background: transparent;
+  color: var(--text4);
+  transition: color 0.2s;
+}
+.remove-btn:hover { color: var(--red); }
+
+/* ─── SOURCES ─────────────────────────────────── */
+.sources-section { margin-bottom: 18px; }
+.sources-section-label {
+  font-size: 0.65rem;
+  color: var(--text4);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border);
+}
+.source-row {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 11px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  transition: border-color 0.2s;
+}
+.source-row:hover { border-color: var(--accent2); }
+
+.toggle {
+  flex-shrink: 0;
+  width: 30px; height: 17px;
+  background: var(--surface2);
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 11px; height: 11px;
+  background: var(--text3);
+  border-radius: 50%;
+  top: 2px; left: 2px;
+  transition: all 0.25s;
+}
+.toggle.on { background: rgba(107,158,120,0.2); border-color: var(--green); }
+.toggle.on::after { background: var(--green); left: 15px; }
+
+.source-info { flex: 1; min-width: 0; }
+.source-name {
+  font-size: 0.78rem;
+  color: var(--text);
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.source-tag {
+  font-size: 0.59rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--surface2);
+  color: var(--text3);
+  border: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+}
+.source-url {
+  font-size: 0.66rem;
+  color: var(--text4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  font-family: 'DM Mono', monospace;
+}
+.source-del {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text4);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 2px 4px;
+  transition: color 0.2s;
+}
+.source-del:hover { color: var(--red); }
+
+/* Add source form */
+.add-source {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 13px;
+  margin-top: 6px;
+}
+.form-label {
+  font-size: 0.68rem;
+  color: var(--text3);
+  margin-bottom: 9px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.form-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 0.75rem;
+  font-family: 'Outfit', sans-serif;
+  margin-bottom: 6px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--accent2); }
+.form-input::placeholder { color: var(--text4); }
+.form-input option { background: var(--surface2); }
+.btn-add {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--accent2);
+  color: var(--accent);
+  padding: 7px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.2s;
+}
+.btn-add:hover { background: rgba(212,168,83,0.1); }
+
+/* ─── FACEBOOK PANEL ──────────────────────────── */
+.fb-section { margin-bottom: 18px; }
+.fb-connect-btn {
+  width: 100%;
+  background: #1877f2;
+  border: none;
+  color: #fff;
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s;
+  margin-bottom: 8px;
+}
+.fb-connect-btn:hover { background: #1466d4; }
+.fb-connect-btn.connected { background: rgba(24,119,242,0.15); color: #5a9bf8; border: 1px solid rgba(24,119,242,0.3); }
+
+.fb-event-card {
+  background: var(--bg);
+  border: 1px solid rgba(107,136,180,0.2);
+  border-left: 3px solid var(--blue);
+  border-radius: 8px;
+  padding: 9px 11px;
+  margin-bottom: 6px;
+  font-size: 0.76rem;
+}
+.fb-event-title { color: var(--text); margin-bottom: 3px; font-weight: 400; }
+.fb-event-meta { color: var(--text3); font-size: 0.68rem; }
+.fb-event-actions { display: flex; gap: 5px; margin-top: 6px; }
+.fb-add-btn {
+  font-size: 0.68rem;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: rgba(107,136,180,0.1);
+  border: 1px solid rgba(107,136,180,0.25);
+  color: var(--blue);
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.2s;
+}
+.fb-add-btn:hover { background: rgba(107,136,180,0.2); }
+
+/* ─── PROFILE MODAL ───────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+@media (min-width: 600px) {
+  .modal-overlay { align-items: center; }
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  padding: 20px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+@media (min-width: 600px) {
+  .modal { border-radius: 16px; }
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  transition: color 0.2s;
+}
+.modal-close:hover { color: var(--text); }
+.modal-section { margin-bottom: 16px; }
+.modal-section-title {
+  font-size: 0.68rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 8px;
+}
+.interest-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.interest-tag {
+  font-size: 0.73rem;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+}
+.interest-tag:hover { border-color: var(--accent2); color: var(--text2); }
+.interest-tag.selected {
+  background: rgba(212,168,83,0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+.btn-save {
+  flex: 1;
+  background: var(--accent);
+  border: none;
+  color: var(--bg);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-save:hover { background: var(--accent3); }
+.btn-cancel {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.2s;
+}
+.btn-cancel:hover { border-color: var(--accent2); }
+
+/* ─── STATS BAR ───────────────────────────────── */
+.stats-bar {
+  display: flex;
+  gap: 14px;
+  padding: 6px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.7rem;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+  flex-wrap: wrap;
+}
+.stat { display: flex; align-items: center; gap: 5px; }
+.stat-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+/* ─── MOBILE BOTTOM NAV ───────────────────────── */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 8px 0;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 150;
+}
+.mobile-nav-inner {
+  display: flex;
+  justify-content: space-around;
+}
+.mobile-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 5px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  position: relative;
+  font-family: 'Outfit', sans-serif;
+}
+.mobile-nav-btn span { font-size: 0.6rem; }
+.mobile-nav-btn.active { color: var(--accent); }
+.mobile-nav-btn .mbadge {
+  position: absolute;
+  top: 2px; right: 8px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 0.5rem;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Animations */
+.fade-in { animation: fadeIn 0.3s ease forwards; opacity: 0; }
+.s1{animation-delay:.04s} .s2{animation-delay:.08s} .s3{animation-delay:.12s}
+.s4{animation-delay:.16s} .s5{animation-delay:.20s} .s6{animation-delay:.24s}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ─── MOBILE RESPONSIVE ───────────────────────── */
+@media (max-width: 768px) {
+  .panel-side { display: none; width: 0; border: none; }
+  .panel-side.mobile-visible {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0;
+    top: auto;
+    bottom: 60px;
+    width: 100%;
+    max-height: 75vh;
+    z-index: 140;
+    border-top: 1px solid var(--border);
+    border-left: none;
+    background: var(--surface);
+  }
+  .mobile-nav { display: block; }
+  .panel-main { padding-bottom: 80px; }
+  .filter-bar { padding: 8px 12px; }
+  .search-config { padding: 13px; }
+}
+
+@media (max-width: 480px) {
+  .config-row { grid-template-columns: 1fr; }
+  .config-row.triple { grid-template-columns: 1fr 1fr; }
+  .date-grid { grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .date-btn .day-name { font-size: 0.52rem; }
+  .date-btn .day-num { font-size: 0.82rem; }
+  .header-right .btn-search-main { padding: 8px 12px; font-size: 0.78rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─────────────────────────── -->
+<header>
+  <div class="logo">Budapest <em>Program Discovery</em></div>
+  <div class="header-right">
+    <button class="btn-icon" onclick="openProfile()" title="Profil beállítások">
+      <span>⚙</span>
+    </button>
+    <button class="btn-icon" id="fbStatusBtn" onclick="mobileSwitchTab('facebook')" title="Facebook">
+      <span>f</span>
+      <span class="badge" id="fbBadge" style="display:none">0</span>
+    </button>
+    <button class="btn-search-main" id="searchBtn" onclick="doSearch()">✦ Keresés</button>
+  </div>
+</header>
+
+<!-- ─── STATS BAR ──────────────────────── -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-dot" style="background:var(--green)"></div><span id="statSaved">0 mentett</span></div>
+  <div class="stat"><div class="stat-dot" style="background:var(--accent)"></div><span id="statTotal">0 találat</span></div>
+  <div class="stat"><div class="stat-dot" style="background:var(--text3)"></div><span id="statSrc">0 forrás</span></div>
+  <div class="stat"><div class="stat-dot" style="background:var(--blue)"></div><span id="statFb">FB: –</span></div>
+</div>
+
+<!-- ─── FILTER CHIPS ───────────────────── -->
+<div class="filter-bar" id="filterBar">
+  <span class="filter-chip active" data-filter="all" onclick="setFilter('all')">Összes</span>
+  <div class="filter-sep"></div>
+  <span class="filter-chip" data-filter="program" onclick="setFilter('program')">🎭 Program</span>
+  <span class="filter-chip" data-filter="deal" onclick="setFilter('deal')">🏷 Kedvezmény</span>
+  <span class="filter-chip" data-filter="fb" onclick="setFilter('fb')">📘 Facebook</span>
+  <span class="filter-chip" data-filter="ics" onclick="setFilter('ics')">📅 Naptáram</span>
+  <div class="filter-sep"></div>
+  <span class="filter-chip" data-filter="morning" onclick="setFilter('morning')">🌅 Reggel</span>
+  <span class="filter-chip" data-filter="afternoon" onclick="setFilter('afternoon')">☀️ Dél</span>
+  <span class="filter-chip" data-filter="evening" onclick="setFilter('evening')">🌆 Este</span>
+</div>
+
+<!-- ─── MAIN BODY ──────────────────────── -->
+<div class="app-body">
+
+  <!-- LEFT: Programs -->
+  <div class="panel-main" id="panelMain">
+
+    <!-- Search Config -->
+    <div class="search-config" id="searchConfig">
+
+      <div class="week-nav-row">
+        <span class="week-label" id="weekLabel">2025 — ez a hét</span>
+        <div style="display:flex;gap:5px">
+          <button class="week-nav-btn" onclick="changeWeek(-1)">‹</button>
+          <button class="week-nav-btn" onclick="changeWeek(1)">›</button>
+        </div>
+      </div>
+
+      <div class="date-grid" id="dateGrid"></div>
+
+      <div class="config-row">
+        <div class="config-field">
+          <label class="config-label">Időtől</label>
+          <input type="time" id="timeFrom" class="config-input" value="08:00">
+        </div>
+        <div class="config-field">
+          <label class="config-label">Időig</label>
+          <input type="time" id="timeTo" class="config-input" value="22:00">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" id="loadingState">
+      <div class="loading-orbs"><span></span><span></span><span></span></div>
+      <div class="loading-steps">
+        <div class="loading-step" id="step1"><div class="step-dot"></div>Programforrások elemzése…</div>
+        <div class="loading-step" id="step2"><div class="step-dot"></div>Facebook események lekérdezése…</div>
+        <div class="loading-step" id="step3"><div class="step-dot"></div>Szűrés és rendezés…</div>
+        <div class="loading-step" id="step4"><div class="step-dot"></div>Eredmények összeállítása…</div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultSection" style="display:none">
+      <div class="section-header">
+        <div class="section-title">
+          Programok
+          <span class="section-count" id="programCount">0</span>
+        </div>
+      </div>
+      <div class="cards-list" id="programsList"></div>
+    </div>
+
+    <!-- Empty -->
+    <div id="emptyState">
+      <div class="empty-state">
+        <span class="empty-icon">✦</span>
+        Válassz dátumot és kattints a <strong style="color:var(--accent)">Keresés</strong> gombra<br>
+        hogy megtaláljuk a legjobb programokat.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Side Panel -->
+  <div class="panel-side" id="panelSide">
+    <div class="side-tabs">
+      <div class="side-tab active" data-panel="saved" onclick="switchSideTab('saved')">
+        ♡ Mentett <span class="cnt" id="savedTabCnt">0</span>
+      </div>
+      <div class="side-tab" data-panel="facebook" onclick="switchSideTab('facebook')">
+        📘 Facebook
+      </div>
+      <div class="side-tab" data-panel="sources" onclick="switchSideTab('sources')">
+        ⚙ Források
+      </div>
+    </div>
+
+    <!-- Saved -->
+    <div class="side-panel-content active" id="panel-saved">
+      <div id="savedList">
+        <div class="empty-state">
+          <span class="empty-icon">♡</span>
+          A mentett programok itt jelennek meg.
+        </div>
+      </div>
+    </div>
+
+    <!-- Facebook -->
+    <div class="side-panel-content" id="panel-facebook">
+      <div class="fb-section">
+        <div class="sources-section-label" style="margin-bottom:10px">Facebook Bejelentkezés</div>
+        <button class="fb-connect-btn" id="fbLoginBtn" onclick="fbLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          Bejelentkezés Facebookkal
+        </button>
+
+        <div class="fb-section">
+          <div class="sources-section-label" style="margin-bottom:6px">FB App ID beállítás</div>
+          <input type="text" class="form-input" id="fbAppIdInput" placeholder="Facebook App ID (pl. 1234567890)" style="margin-bottom:4px">
+          <button class="btn-add" onclick="saveFbAppId()" style="margin-bottom:10px">Mentés</button>
+        </div>
+
+        <div class="sources-section-label" style="margin-bottom:6px">ICS naptár (Facebookról exportált)</div>
+        <label style="display:block;cursor:pointer">
+          <div style="font-size:0.72rem;color:var(--text3);margin-bottom:6px">Facebook → Események → Naptár exportálás → .ics feltöltés</div>
+          <input type="file" accept=".ics" onchange="loadICS(this)" style="font-size:0.72rem;color:var(--text2);width:100%">
+        </label>
+        <div id="icsStatus" style="font-size:0.72rem;color:var(--text3);margin-top:6px"></div>
+      </div>
+
+      <div class="fb-section">
+        <div class="sources-section-label">Saját facebook események <span id="myFbEvtCnt" style="color:var(--text3)">(0)</span></div>
+        <div id="myFbEvents">
+          <div style="font-size:0.72rem;color:var(--text4);font-style:italic">Nincs betöltve.</div>
+        </div>
+      </div>
+
+      <div class="fb-section">
+        <div class="sources-section-label">Budapest ajánlók (nyilvános)</div>
+        <div id="fbPublicEvents">
+          <div style="font-size:0.72rem;color:var(--text4);font-style:italic">Keresés után megjelennek.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sources -->
+    <div class="side-panel-content" id="panel-sources">
+      <div class="sources-section">
+        <div class="sources-section-label">Program oldalak</div>
+        <div id="srcList-programs"></div>
+      </div>
+      <div class="sources-section">
+        <div class="sources-section-label">Kedvezmény / kupon</div>
+        <div id="srcList-deals"></div>
+      </div>
+      <div class="sources-section">
+        <div class="sources-section-label">Saját forrás</div>
+        <div id="srcList-custom"></div>
+      </div>
+      <div class="add-source">
+        <div class="form-label">+ Új forrás</div>
+        <input class="form-input" id="newSrcName" placeholder="Név (pl. Jegy.hu)">
+        <input class="form-input" id="newSrcUrl" placeholder="URL (pl. https://jegy.hu)">
+        <select class="form-input" id="newSrcType">
+          <option value="programs">Programforrás</option>
+          <option value="deals">Kedvezmény</option>
+          <option value="custom">Egyéb</option>
+        </select>
+        <button class="btn-add" onclick="addSource()">Hozzáadás</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MOBILE BOTTOM NAV ──────────────── -->
+<div class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mobile-nav-btn active" id="mbn-search" onclick="mobileSwitchTab('search')">
+      <span style="font-size:1.1rem">🔍</span>
+      <span>Keresés</span>
+    </button>
+    <button class="mobile-nav-btn" id="mbn-saved" onclick="mobileSwitchTab('saved')">
+      <span style="font-size:1.1rem">♡</span>
+      <span>Mentett</span>
+      <span class="mbadge" id="mobileSavedBadge" style="display:none">0</span>
+    </button>
+    <button class="mobile-nav-btn" id="mbn-facebook" onclick="mobileSwitchTab('facebook')">
+      <span style="font-size:1.1rem">f</span>
+      <span>Facebook</span>
+    </button>
+    <button class="mobile-nav-btn" id="mbn-sources" onclick="mobileSwitchTab('sources')">
+      <span style="font-size:1.1rem">⚙</span>
+      <span>Beállítás</span>
+    </button>
+  </div>
+</div>
+
+<!-- ─── PROFILE MODAL ──────────────────── -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <div class="modal-title">
+      Profil beállítások
+      <button class="modal-close" onclick="closeModal('profileModal')">✕</button>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Alapadatok</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="config-field">
+          <label class="config-label">Korosztály</label>
+          <select class="config-input" id="profAge">
+            <option value="18-25">18–25</option>
+            <option value="25-35">25–35</option>
+            <option value="35-50" selected>35–50</option>
+            <option value="50+">50+</option>
+            <option value="barmely">Bármely</option>
+          </select>
+        </div>
+        <div class="config-field">
+          <label class="config-label">Kik számára keres</label>
+          <select class="config-input" id="profFor">
+            <option value="egyedul">Magamnak</option>
+            <option value="parkapcsolat">Ismerkedés</option>
+            <option value="baratokkal">Barátokkal</option>
+            <option value="csalad">Családdal</option>
+            <option value="barmely">Általános</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Érdeklődési körök</div>
+      <div class="interest-grid" id="interestGrid"></div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Keresési preferenciák</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="config-field">
+          <label class="config-label">Max találat</label>
+          <select class="config-input" id="profMaxResults">
+            <option value="6">6 találat</option>
+            <option value="10" selected>10 találat</option>
+            <option value="15">15 találat</option>
+          </select>
+        </div>
+        <div class="config-field">
+          <label class="config-label">Keresési fókusz</label>
+          <select class="config-input" id="profFocus">
+            <option value="all">Minden forrás</option>
+            <option value="web">Web + hirdetések</option>
+            <option value="fb">Facebook fókusz</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Egyéni utasítás az AI-nak (opcionális)</div>
+      <textarea class="config-input" id="profCustomPrompt" rows="3"
+        placeholder="Pl: Csak ingyenes programokat keress, kerüld a tömeg-eseményeket..."
+        style="resize:vertical"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('profileModal')">Mégse</button>
+      <button class="btn-save" onclick="saveProfile()">✓ Mentés</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+const INTERESTS = [
+  '🎵 Zene','🎭 Színház','🖼 Kiállítás','🍷 Borkóstoló','💃 Tánc',
+  '🍜 Gasztronómia','🧘 Wellness','📚 Irodalom','🎬 Film','🏃 Sport',
+  '🎨 Alkotás','🌿 Természet','🎲 Játék','📸 Fotózás','🏛 Kultúra',
+  '🎤 Stand-up','🎪 Fesztivál','🏊 Úszás','🚴 Kerékpár','🍺 Kocsma'
+];
+
+const DEFAULT_SOURCES = [
+  { id:'s1',  name:'Jegy.hu',              url:'https://jegy.hu',                         type:'programs', on:true  },
+  { id:'s2',  name:'Kultúra.hu',           url:'https://kultura.hu',                      type:'programs', on:true  },
+  { id:'s3',  name:'Budapest.hu',          url:'https://budapest.hu',                     type:'programs', on:true  },
+  { id:'s4',  name:'Eventim.hu',           url:'https://www.eventim.hu',                  type:'programs', on:true  },
+  { id:'s5',  name:'Programturizmus.hu',   url:'https://programturizmus.hu/mag/budapest', type:'programs', on:true  },
+  { id:'s6',  name:'Funzine.hu',           url:'https://funzine.hu',                      type:'programs', on:true  },
+  { id:'s7',  name:'Pestiest.hu',          url:'https://pestiest.hu',                     type:'programs', on:true  },
+  { id:'s8',  name:'Facebook Events',      url:'https://www.facebook.com/events/budapest',type:'programs', on:true  },
+  { id:'s9',  name:'Simple kedvezmények',  url:'https://simplepay.hu',                    type:'deals',    on:true  },
+  { id:'s10', name:'Groupon Budapest',     url:'https://www.groupon.hu/local/budapest',   type:'deals',    on:true  },
+  { id:'s11', name:'LastMinute.hu',        url:'https://www.lastminute.hu',               type:'deals',    on:true  },
+  { id:'s12', name:'Bonusbrigade.hu',      url:'https://www.bonusbrigade.hu',             type:'deals',    on:false },
+];
+
+let state = {
+  programs:    [],
+  savedPrograms: JSON.parse(localStorage.getItem('bpd_saved') || '[]'),
+  preferences:   JSON.parse(localStorage.getItem('bpd_prefs') || '{"liked":[],"disliked":[]}'),
+  sources:       JSON.parse(localStorage.getItem('bpd_sources') || 'null') || DEFAULT_SOURCES,
+  profile:       JSON.parse(localStorage.getItem('bpd_profile') || 'null') || {
+    age: '35-50', forWhom: 'parkapcsolat', interests: ['🍷 Borkóstoló','💃 Tánc','🎵 Zene','🖼 Kiállítás'],
+    maxResults: 10, focus: 'all', customPrompt: ''
+  },
+  fbAppId:       localStorage.getItem('bpd_fbAppId') || '',
+  fbConnected:   false,
+  icsEvents:     [],
+  fbPublicEvents:[],
+  currentFilter: 'all',
+  weekOffset:    0,
+  selectedDates: [],
+};
+
+// ═══════════════════════════════════════
+// SAVE
+// ═══════════════════════════════════════
+function save(key, val) { localStorage.setItem('bpd_' + key, JSON.stringify(val)); }
+function saveSources()  { save('sources', state.sources); }
+
+// ═══════════════════════════════════════
+// DATES
+// ═══════════════════════════════════════
+function getLocalToday() {
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+
+function getWeekDates() {
+  const today = getLocalToday();
+  const dow = today.getDay();
+  const mon = new Date(today);
+  mon.setDate(today.getDate() + (dow === 0 ? -6 : 1 - dow) + state.weekOffset * 7);
+  return Array.from({length:7}, (_, i) => {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    return d;
+  });
+}
+
+function updateWeekLabel() {
+  const labels = ['ez a hét','jövő hét','2 hét múlva'];
+  const lbl = state.weekOffset < 0
+    ? `${Math.abs(state.weekOffset)} héttel ezelőtt`
+    : (labels[state.weekOffset] || `+${state.weekOffset} hét`);
+  document.getElementById('weekLabel').textContent =
+    new Date().getFullYear() + ' — ' + lbl;
+}
+
+function changeWeek(dir) {
+  state.weekOffset += dir;
+  state.selectedDates = [];
+  renderDateGrid();
+  updateWeekLabel();
+}
+
+function renderDateGrid() {
+  const today = getLocalToday();
+  const days = getWeekDates();
+  const DAY_NAMES = ['V','H','K','Sze','Cs','P','Sz'];
+  document.getElementById('dateGrid').innerHTML = days.map(d => {
+    const isPast = d < today;
+    const isToday = d.getTime() === today.getTime();
+    const dateStr = d.toISOString().slice(0,10);
+    const isSelected = state.selectedDates.includes(dateStr);
+    const cls = [
+      'date-btn',
+      isPast ? 'past' : '',
+      isToday ? 'today' : '',
+      isSelected ? 'selected' : ''
+    ].filter(Boolean).join(' ');
+    return `<button class="${cls}" onclick="toggleDate('${dateStr}')">
+      <span class="day-name">${DAY_NAMES[d.getDay()]}</span>
+      <span class="day-num">${d.getDate()}</span>
+    </button>`;
+  }).join('');
+}
+
+function toggleDate(dateStr) {
+  const idx = state.selectedDates.indexOf(dateStr);
+  if (idx === -1) state.selectedDates.push(dateStr);
+  else state.selectedDates.splice(idx, 1);
+  renderDateGrid();
+}
+
+// ═══════════════════════════════════════
+// TABS & NAVIGATION
+// ═══════════════════════════════════════
+function switchSideTab(name) {
+  document.querySelectorAll('.side-tab').forEach(t => t.classList.toggle('active', t.dataset.panel === name));
+  document.querySelectorAll('.side-panel-content').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+}
+
+let mobilePanel = 'search';
+function mobileSwitchTab(name) {
+  mobilePanel = name;
+  ['search','saved','facebook','sources'].forEach(n => {
+    document.getElementById('mbn-' + n)?.classList.toggle('active', n === name);
+  });
+  const side = document.getElementById('panelSide');
+  if (name === 'search') {
+    side.classList.remove('mobile-visible');
+  } else {
+    side.classList.add('mobile-visible');
+    switchSideTab(name);
+  }
+}
+
+// ═══════════════════════════════════════
+// FILTER
+// ═══════════════════════════════════════
+function setFilter(f) {
+  state.currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
+  renderPrograms();
+}
+
+function filterProgram(p) {
+  const f = state.currentFilter;
+  if (f === 'all')     return true;
+  if (f === 'program') return p.type === 'program';
+  if (f === 'deal')    return p.type === 'deal';
+  if (f === 'fb')      return p.source === 'fb';
+  if (f === 'ics')     return p.source === 'ics';
+  if (f === 'morning') return parseTime(p.time) < 12;
+  if (f === 'afternoon') { const h = parseTime(p.time); return h >= 12 && h < 17; }
+  if (f === 'evening') return parseTime(p.time) >= 17;
+  return true;
+}
+function parseTime(t) { if (!t) return 99; const [h] = t.split(':'); return parseInt(h); }
+
+// ═══════════════════════════════════════
+// PROFILE MODAL
+// ═══════════════════════════════════════
+function openProfile() {
+  // Render interest tags
+  const grid = document.getElementById('interestGrid');
+  grid.innerHTML = INTERESTS.map(i => {
+    const sel = state.profile.interests.includes(i);
+    return `<span class="interest-tag ${sel ? 'selected' : ''}" onclick="toggleInterest(this, '${i}')">${i}</span>`;
+  }).join('');
+  // Set values
+  document.getElementById('profAge').value = state.profile.age;
+  document.getElementById('profFor').value = state.profile.forWhom;
+  document.getElementById('profMaxResults').value = state.profile.maxResults;
+  document.getElementById('profFocus').value = state.profile.focus;
+  document.getElementById('profCustomPrompt').value = state.profile.customPrompt || '';
+  if (state.fbAppId) document.getElementById('fbAppIdInput').value = state.fbAppId;
+  document.getElementById('profileModal').classList.add('active');
+}
+
+function toggleInterest(el, val) {
+  el.classList.toggle('selected');
+}
+
+function saveProfile() {
+  const selectedInterests = Array.from(document.querySelectorAll('.interest-tag.selected')).map(e => e.textContent.trim());
+  state.profile = {
+    age: document.getElementById('profAge').value,
+    forWhom: document.getElementById('profFor').value,
+    interests: selectedInterests,
+    maxResults: parseInt(document.getElementById('profMaxResults').value),
+    focus: document.getElementById('profFocus').value,
+    customPrompt: document.getElementById('profCustomPrompt').value,
+  };
+  save('profile', state.profile);
+  closeModal('profileModal');
+}
+
+function saveFbAppId() {
+  const v = document.getElementById('fbAppIdInput').value.trim();
+  state.fbAppId = v;
+  localStorage.setItem('bpd_fbAppId', v);
+  alert(v ? '✓ Facebook App ID mentve!' : 'App ID törölve.');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// ═══════════════════════════════════════
+// FACEBOOK LOGIN (Graph API)
+// ═══════════════════════════════════════
+function fbLogin() {
+  if (!state.fbAppId) {
+    alert('Kérlek add meg a Facebook App ID-t a beállításokban!');
+    return;
+  }
+  if (state.fbConnected) {
+    fbFetchMyEvents();
+    return;
+  }
+  // Load FB SDK
+  window.fbAsyncInit = function() {
+    FB.init({ appId: state.fbAppId, cookie: true, xfbml: false, version: 'v19.0' });
+    FB.login(function(response) {
+      if (response.authResponse) {
+        state.fbConnected = true;
+        document.getElementById('fbLoginBtn').textContent = '✓ Kapcsolódva – Események frissítése';
+        document.getElementById('fbLoginBtn').classList.add('connected');
+        fbFetchMyEvents();
+      } else {
+        alert('Facebook bejelentkezés sikertelen.');
+      }
+    }, { scope: 'user_events,public_profile' });
+  };
+  if (!document.getElementById('fb-sdk')) {
+    const s = document.createElement('script');
+    s.id = 'fb-sdk';
+    s.src = 'https://connect.facebook.net/hu_HU/sdk.js';
+    document.head.appendChild(s);
+  } else if (window.FB) {
+    window.fbAsyncInit();
+  }
+}
+
+function fbFetchMyEvents() {
+  if (!window.FB) { alert('FB SDK nem töltődött be.'); return; }
+  const timeFrom = document.getElementById('timeFrom').value;
+  const timeTo   = document.getElementById('timeTo').value;
+  FB.api('/me/events', {
+    fields: 'name,start_time,end_time,place,description,cover',
+    time_filter: 'upcoming',
+    limit: 50
+  }, function(resp) {
+    if (resp.error) { alert('FB API hiba: ' + resp.error.message); return; }
+    const events = (resp.data || []).map(e => ({
+      id: 'fb_' + e.id,
+      type: 'program',
+      source: 'fb',
+      emoji: '📘',
+      title: e.name,
+      venue: e.place ? e.place.name : 'Facebook esemény',
+      date: new Date(e.start_time).toLocaleDateString('hu-HU', { month:'long', day:'numeric', weekday:'long' }),
+      time: new Date(e.start_time).toTimeString().slice(0,5),
+      description: (e.description || '').slice(0, 200),
+      why: 'A saját Facebook esemény-ajánlóidból.',
+      tags: ['facebook','esemény'],
+      url: 'https://facebook.com/events/' + e.id,
+      discount: null
+    }));
+    state.programs = [...state.programs.filter(p => p.source !== 'fb'), ...events];
+    renderMyFbEvents(events);
+    renderPrograms();
+    updateStats();
+    document.getElementById('statFb').textContent = `FB: ${events.length} esemény`;
+    document.getElementById('fbBadge').textContent = events.length;
+    document.getElementById('fbBadge').style.display = events.length ? '' : 'none';
+  });
+}
+
+function renderMyFbEvents(events) {
+  const el = document.getElementById('myFbEvents');
+  document.getElementById('myFbEvtCnt').textContent = `(${events.length})`;
+  if (!events.length) { el.innerHTML = '<div style="font-size:0.72rem;color:var(--text4);font-style:italic">Nincs közelgő Facebook eseményed.</div>'; return; }
+  el.innerHTML = events.slice(0,20).map(e => `
+    <div class="fb-event-card">
+      <div class="fb-event-title">${e.title}</div>
+      <div class="fb-event-meta">📍 ${e.venue} · 📅 ${e.date} ${e.time}</div>
+      <div class="fb-event-actions">
+        <a href="${e.url}" target="_blank" class="fb-add-btn">Megnézem →</a>
+        <button class="fb-add-btn" onclick="likeProgram('${e.id}')">♡ Ment</button>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// ICS PARSE
+// ═══════════════════════════════════════
+function loadICS(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const events = parseICS(e.target.result);
+    state.icsEvents = events;
+    localStorage.setItem('bpd_ics', e.target.result);
+    const el = document.getElementById('icsStatus');
+    el.textContent = `✓ ${events.length} esemény betöltve (${file.name})`;
+    el.style.color = 'var(--green)';
+    // Add ICS events to programs
+    const icsPrograms = events.map(ev => ({
+      id: 'ics_' + ev.uid,
+      type: 'program',
+      source: 'ics',
+      emoji: '📅',
+      title: ev.title,
+      venue: ev.location || 'Facebook esemény',
+      date: ev.dt.toLocaleDateString('hu-HU', { month:'long', day:'numeric', weekday:'long' }),
+      time: ev.dt.toTimeString().slice(0,5),
+      description: ev.description || 'Facebook naptáradból importált esemény.',
+      why: 'A Facebook naptáradban szereplő esemény.',
+      tags: ['ics','facebook'],
+      url: ev.url || '#',
+      discount: null,
+      _dt: ev.dt
+    }));
+    state.programs = [...state.programs.filter(p => p.source !== 'ics'), ...icsPrograms];
+    renderPrograms();
+    updateStats();
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function parseICS(text) {
+  const events = [];
+  const blocks = text.split('BEGIN:VEVENT').slice(1);
+  for (const block of blocks) {
+    const get = (field) => {
+      const m = block.match(new RegExp(field + '[^:]*:([\\s\\S]+?)(?:\\r?\\n[A-Z]|\\r?\\nEND)'));
+      if (!m) return '';
+      return m[1].replace(/\r?\n[ \t]/g, '').trim();
+    };
+    const dtRaw = get('DTSTART');
+    if (!dtRaw) continue;
+    try {
+      const dtStr = dtRaw.replace('Z','').slice(0,15);
+      const dt = new Date(
+        parseInt(dtStr.slice(0,4)),
+        parseInt(dtStr.slice(4,6)) - 1,
+        parseInt(dtStr.slice(6,8)),
+        parseInt(dtStr.slice(9,11) || '0'),
+        parseInt(dtStr.slice(11,13) || '0')
+      );
+      if (dtRaw.endsWith('Z')) dt.setHours(dt.getHours() + 1); // UTC → CET
+      events.push({
+        uid: get('UID') || Math.random().toString(36),
+        title: get('SUMMARY').replace(/\\[,n]/g, s => s === '\\n' ? ' ' : ','),
+        location: get('LOCATION').replace(/\\,/g, ','),
+        url: get('URL'),
+        description: get('DESCRIPTION').replace(/\\[,n]/g, s => s === '\\n' ? ' ' : ',').slice(0,300),
+        dt
+      });
+    } catch(e) {}
+  }
+  return events;
+}
+
+// ═══════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════
+async function doSearch() {
+  const btn = document.getElementById('searchBtn');
+  const loading = document.getElementById('loadingState');
+  const resultSec = document.getElementById('resultSection');
+  const emptySt = document.getElementById('emptyState');
+
+  // Date/time selection
+  const timeFrom = document.getElementById('timeFrom').value;
+  const timeTo   = document.getElementById('timeTo').value;
+
+  // If no dates selected, default to all days of the current week (not past)
+  let dates = state.selectedDates;
+  if (!dates.length) {
+    const today = getLocalToday().toISOString().slice(0,10);
+    dates = getWeekDates().map(d => d.toISOString().slice(0,10)).filter(d => d >= today);
+  }
+
+  btn.disabled = true;
+  btn.textContent = '…';
+  loading.classList.add('active');
+  resultSec.style.display = 'none';
+  emptySt.style.display = 'none';
+
+  // Progress animation
+  const steps = ['step1','step2','step3','step4'];
+  steps.forEach(s => { document.getElementById(s).className = 'loading-step'; });
+  let stepIdx = 0;
+  const stepTimer = setInterval(() => {
+    if (stepIdx > 0) document.getElementById(steps[stepIdx-1]).className = 'loading-step done';
+    if (stepIdx < steps.length) { document.getElementById(steps[stepIdx]).className = 'loading-step active'; stepIdx++; }
+    else clearInterval(stepTimer);
+  }, 900);
+
+  const activeSrcs = state.sources.filter(s => s.on);
+  const srcText = activeSrcs.map(s => `- ${s.name}: ${s.url}`).join('\n');
+  const ilyetMeg = state.savedPrograms.filter(p => p.ilyetMeg).map(p => `"${p.title}"`).join(', ');
+  const likedTags = state.preferences.liked.slice(-12).join(', ') || 'nincs adat';
+  const dislikedTags = state.preferences.disliked.slice(-6).join(', ') || 'nincs';
+  const prof = state.profile;
+
+  const dateLines = dates.map(d => {
+    const dt = new Date(d);
+    return dt.toLocaleDateString('hu-HU', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }).join('\n');
+
+  const forWhomMap = {
+    egyedul: 'egyedül érkező ember',
+    parkapcsolat: 'párt/ismerkedési lehetőséget kereső',
+    baratokkal: 'barátokkal érkező csoport',
+    csalad: 'családdal érkező felnőtt',
+    barmely: 'általános felnőtt látogató'
+  };
+
+  const prompt = `Te egy precíz budapesti program-kereső asszisztens vagy. Keress alaposan az interneten!
+
+FELHASZNÁLÓI PROFIL:
+- Korosztály: ${prof.age} éves
+- Kinek keres: ${forWhomMap[prof.forWhom] || prof.forWhom}
+- Érdeklődés: ${prof.interests.join(', ')}
+${prof.customPrompt ? `- Egyéni kérés: ${prof.customPrompt}` : ''}
+
+KERESÉSI FELTÉTELEK:
+- Dátumok (CSAK ezeken a napokon kezdődő programok):
+${dateLines}
+- Időintervallum: ${timeFrom} – ${timeTo}
+- Helyszín: Budapest és környéke
+
+AKTÍV FORRÁSAIM (keresd fel ezeket!):
+${srcText}
+
+PLUSZ KERESÉSI TAKTIKA — NAGYON FONTOS:
+1. Keress Facebook nyilvános eseményekre: site:facebook.com/events Budapest
+2. Keress hirdetésekre: budapest program "${dates[0]?.slice(0,7) || new Date().toISOString().slice(0,7)}" 
+3. Keress óriásplakát/banner hirdetett eseményekre: budapest kiállítás / fesztivál / workshop
+4. Keress kulturális intézmények saját weboldalain: múzeum, galéria, koncertterem Budapest
+5. Keress Instagramon/TikTokon hivatkozott eseményekre (Google-on keresztül)
+
+SZŰRÉSI SZABÁLYOK:
+- KIZÁRÓLAG a megadott dátumokra és időintervallumra eső programok
+- Minden típus: kulturális, sport, gasztronómia, szórakozás, oktatás
+- Érvényes, aktuális akciók és kedvezmények (lejárt ajánlatot NE hozz!)
+- Mentett és tetszett: ${likedTags}
+- Kerülendő: ${dislikedTags}
+- Hasonló programokat keress mint: ${ilyetMeg || 'nincs korábbi preferencia'}
+
+URL SZABÁLY (KRITIKUS):
+- Minden programhoz VALÓDI, működő linket adj — amit a kereséssel találtál
+- Facebook eseménynél: https://facebook.com/events/[ID]
+- Főoldalt NE adj meg ha van specifikus esemény URL
+
+VISSZAADANDÓ JSON (csak a tömb, semmi más):
+[
+  {
+    "id": "unikalis_id",
+    "type": "program",
+    "source": "web",
+    "emoji": "🎵",
+    "title": "Program neve",
+    "venue": "Helyszín, kerület",
+    "date": "PONTOSAN a megadott dátumlistából",
+    "time": "HH:MM",
+    "description": "2-3 mondat a programról",
+    "why": "Miért illik a felhasználói profilhoz (1 mondat)",
+    "tags": ["tag1","tag2","tag3"],
+    "discount": "Akció ha van, null ha nincs",
+    "url": "https://..."
+  }
+]
+
+Adj vissza ${prof.maxResults} tételt. CSAK JSON tömb, semmi más szöveg.`;
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "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",
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 3000,
+        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    const data = await resp.json();
+    clearInterval(stepTimer);
+    steps.forEach(s => document.getElementById(s).className = 'loading-step done');
+
+    if (data.error) throw new Error(`API hiba: ${data.error.message}`);
+    if (!data.content) throw new Error('Váratlan API válasz.');
+
+    const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+
+    let parsed = null;
+    // Try markdown code block first
+    const mdMatch = text.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+    if (mdMatch) {
+      try { parsed = JSON.parse(mdMatch[1]); } catch(e){}
+    }
+    // Fallback: raw array
+    if (!parsed) {
+      const arrMatch = text.match(/\[[\s\S]*\]/);
+      if (arrMatch) {
+        const clean = arrMatch[0]
+          .replace(/,\s*\]/g, ']')
+          .replace(/,\s*\}/g, '}')
+          .replace(/[\u0000-\u001F\u007F]/g, ' ');
+        try { parsed = JSON.parse(clean); } catch(e) {
+          // Try individual objects
+          const objs = [];
+          for (const m of text.matchAll(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)?\}/g)) {
+            try { objs.push(JSON.parse(m[0])); } catch(e2) {}
+          }
+          if (objs.length) parsed = objs;
+        }
+      }
+    }
+
+    if (!parsed || !parsed.length) throw new Error('Nem sikerült programokat találni. Próbálj más dátumot vagy forrást!');
+
+    // Merge with ICS / FB events (keep existing non-web ones)
+    const existing = state.programs.filter(p => p.source !== 'web');
+    state.programs = [...existing, ...parsed];
+    renderPrograms();
+    updateStats();
+
+    // Render FB public events section from results
+    const fbResults = parsed.filter(p => p.url && p.url.includes('facebook.com'));
+    if (fbResults.length) renderFbPublicEvents(fbResults);
+
+  } catch(err) {
+    clearInterval(stepTimer);
+    document.getElementById('programsList').innerHTML =
+      `<div class="empty-state"><span class="empty-icon">⚠</span>${err.message}</div>`;
+    resultSec.style.display = 'block';
+  } finally {
+    loading.classList.remove('active');
+    btn.disabled = false;
+    btn.textContent = '✦ Keresés';
+  }
+}
+
+function renderFbPublicEvents(events) {
+  const el = document.getElementById('fbPublicEvents');
+  el.innerHTML = events.map(e => `
+    <div class="fb-event-card">
+      <div class="fb-event-title">${e.emoji} ${e.title}</div>
+      <div class="fb-event-meta">📍 ${e.venue} · 📅 ${e.date} ${e.time}</div>
+      <div class="fb-event-actions">
+        <a href="${e.url}" target="_blank" class="fb-add-btn">Megnézem →</a>
+        <button class="fb-add-btn" onclick="likeProgram('${e.id}')">♡ Ment</button>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// RENDER PROGRAMS
+// ═══════════════════════════════════════
+function renderPrograms() {
+  const list = document.getElementById('programsList');
+  const resultSec = document.getElementById('resultSection');
+  const emptySt = document.getElementById('emptyState');
+
+  const filtered = state.programs.filter(filterProgram);
+  document.getElementById('programCount').textContent = filtered.length;
+
+  if (!state.programs.length) {
+    resultSec.style.display = 'none';
+    emptySt.style.display = 'block';
+    return;
+  }
+
+  resultSec.style.display = 'block';
+  emptySt.style.display = 'none';
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state"><span class="empty-icon">∅</span>Nincs találat erre a szűrőre.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map((p, i) => {
+    const liked   = !!state.savedPrograms.find(s => s.id === p.id);
+    const isDeal  = p.type === 'deal';
+    const isFb    = p.source === 'fb';
+    const isIcs   = p.source === 'ics';
+    const stagger = `s${Math.min(i+1, 6)}`;
+    return `
+    <div class="program-card ${liked?'liked':''} ${isFb?'source-fb':''} fade-in ${stagger}" id="card-${p.id}">
+      <div class="card-header">
+        <div class="card-title">${p.title}</div>
+        <div class="card-badges">
+          ${isFb  ? '<span class="badge badge-fb">facebook</span>' : ''}
+          ${isIcs ? '<span class="badge badge-ics">naptár</span>' : ''}
+          <span class="badge ${isDeal?'badge-deal':'badge-program'}">${isDeal?'kedvezmény':'program'}</span>
+          <span style="font-size:1.1rem">${p.emoji}</span>
+        </div>
+      </div>
+      <div class="card-meta">
+        <span class="meta-item">📍 ${p.venue}</span>
+        <span class="meta-item">📅 ${p.date}</span>
+        <span class="meta-item">🕐 ${p.time}</span>
+        ${p.discount ? `<span class="meta-item highlight">🏷 ${p.discount}</span>` : ''}
+      </div>
+      <div class="card-desc">${p.description}</div>
+      ${p.why ? `<div class="card-why">✦ ${p.why}</div>` : ''}
+      <div class="card-tags">${(p.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="card-actions">
+        <a href="${p.url}" target="_blank" class="btn-link">🔗 Megnézem</a>
+        <button class="btn-like ${liked?'active':''}" onclick="likeProgram('${p.id}')">
+          ${liked ? '❤️ Mentve' : '♡ Tetszik'}
+        </button>
+        <button class="btn-dislike" onclick="dislikeProgram('${p.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// LIKE / DISLIKE
+// ═══════════════════════════════════════
+function likeProgram(id) {
+  const p = state.programs.find(x => x.id === id);
+  if (!p || state.savedPrograms.find(s => s.id === id)) return;
+  state.savedPrograms.unshift({...p, savedAt: new Date().toISOString(), ilyetMeg: false, regisztralt: false});
+  state.preferences.liked.push(...(p.tags||[]));
+  save('saved', state.savedPrograms);
+  save('prefs', state.preferences);
+  const card = document.getElementById('card-' + id);
+  if (card) {
+    card.classList.add('liked');
+    const lb = card.querySelector('.btn-like');
+    if (lb) { lb.classList.add('active'); lb.textContent = '❤️ Mentve'; }
+  }
+  renderSaved(); updateStats();
+}
+
+function dislikeProgram(id) {
+  const p = state.programs.find(x => x.id === id);
+  if (p) { state.preferences.disliked.push(...(p.tags||[])); save('prefs', state.preferences); }
+  const card = document.getElementById('card-' + id);
+  if (card) card.classList.add('disliked');
+}
+
+// ═══════════════════════════════════════
+// SAVED
+// ═══════════════════════════════════════
+function toggleTodo(id, type) {
+  const idx = state.savedPrograms.findIndex(s => s.id === id);
+  if (idx === -1) return;
+  state.savedPrograms[idx][type] = !state.savedPrograms[idx][type];
+  if (type === 'ilyetMeg' && state.savedPrograms[idx][type]) {
+    const tags = state.savedPrograms[idx].tags || [];
+    state.preferences.liked.push(...tags, ...tags);
+    save('prefs', state.preferences);
+  }
+  save('saved', state.savedPrograms);
+  renderSaved();
+}
+
+function removeFromSaved(id) {
+  const p = state.savedPrograms.find(s => s.id === id);
+  if (p) state.preferences.liked.push(...(p.tags||[]));
+  state.savedPrograms = state.savedPrograms.filter(s => s.id !== id);
+  save('saved', state.savedPrograms);
+  save('prefs', state.preferences);
+  renderSaved(); updateStats();
+  const card = document.getElementById('card-' + id);
+  if (card) {
+    card.classList.remove('liked');
+    const lb = card.querySelector('.btn-like');
+    if (lb) { lb.classList.remove('active'); lb.textContent = '♡ Tetszik'; }
+  }
+}
+
+function renderSaved() {
+  const list = document.getElementById('savedList');
+  const cnt  = state.savedPrograms.length;
+  document.getElementById('savedTabCnt').textContent = cnt;
+  document.getElementById('statSaved').textContent = `${cnt} mentett`;
+  const mbBadge = document.getElementById('mobileSavedBadge');
+  mbBadge.textContent = cnt;
+  mbBadge.style.display = cnt ? '' : 'none';
+
+  if (!cnt) {
+    list.innerHTML = '<div class="empty-state"><span class="empty-icon">♡</span>A kedvelt programok itt jelennek meg.</div>';
+    return;
+  }
+  list.innerHTML = state.savedPrograms.map(p => `
+    <div class="saved-card">
+      <div class="saved-title">${p.emoji} ${p.title}</div>
+      <div class="saved-meta">
+        📅 ${p.date} · ${p.time}<br>
+        📍 ${p.venue}
+        ${p.discount ? `<br>🏷 ${p.discount}` : ''}
+      </div>
+      <div class="saved-actions">
+        <button class="todo-btn ${p.ilyetMeg?'done':''}" onclick="toggleTodo('${p.id}','ilyetMeg')">${p.ilyetMeg?'✓':'☐'} Ilyet még</button>
+        <button class="todo-btn ${p.regisztralt?'done':''}" onclick="toggleTodo('${p.id}','regisztralt')">${p.regisztralt?'✓':'☐'} Megcsináltam</button>
+        <a href="${p.url}" target="_blank" class="todo-btn">🔗</a>
+        <button class="remove-btn" onclick="removeFromSaved('${p.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// SOURCES
+// ═══════════════════════════════════════
+function renderSources() {
+  ['programs','deals','custom'].forEach(type => {
+    const el = document.getElementById('srcList-' + type);
+    const list = state.sources.filter(s => s.type === type);
+    if (!list.length) {
+      el.innerHTML = `<div style="font-size:0.72rem;color:var(--text4);padding:5px 0;font-style:italic">Nincs forrás.</div>`;
+      return;
+    }
+    el.innerHTML = list.map(s => `
+      <div class="source-row">
+        <div class="toggle ${s.on?'on':''}" onclick="toggleSrc('${s.id}')"></div>
+        <div class="source-info">
+          <div class="source-name">
+            ${s.name}
+            <span class="source-tag">${s.type==='programs'?'program':s.type==='deals'?'kupon':'egyéb'}</span>
+          </div>
+          <div class="source-url">${s.url}</div>
+        </div>
+        <button class="source-del" onclick="deleteSrc('${s.id}')">✕</button>
+      </div>`).join('');
+  });
+  const active = state.sources.filter(s => s.on).length;
+  document.getElementById('statSrc').textContent = `${active} forrás aktív`;
+}
+
+function toggleSrc(id) {
+  const s = state.sources.find(x => x.id === id);
+  if (s) { s.on = !s.on; saveSources(); renderSources(); }
+}
+
+function deleteSrc(id) {
+  if (!confirm('Törlöd ezt a forrást?')) return;
+  state.sources = state.sources.filter(s => s.id !== id);
+  saveSources(); renderSources();
+}
+
+function addSource() {
+  const name = document.getElementById('newSrcName').value.trim();
+  const url  = document.getElementById('newSrcUrl').value.trim();
+  const type = document.getElementById('newSrcType').value;
+  if (!name || !url) { alert('Kérlek töltsd ki a nevet és URL-t!'); return; }
+  const fullUrl = url.startsWith('http') ? url : 'https://' + url;
+  state.sources.push({ id: 'c' + Date.now(), name, url: fullUrl, type, on: true });
+  saveSources(); renderSources();
+  document.getElementById('newSrcName').value = '';
+  document.getElementById('newSrcUrl').value = '';
+}
+
+// ═══════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════
+function updateStats() {
+  document.getElementById('statTotal').textContent = `${state.programs.length} találat`;
+  renderSaved();
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+renderDateGrid();
+updateWeekLabel();
+renderSaved();
+renderSources();
+
+// Pre-load ICS if stored
+const storedIcs = localStorage.getItem('bpd_ics');
+if (storedIcs) {
+  state.icsEvents = parseICS(storedIcs);
+  const icsPrograms = state.icsEvents.map(ev => ({
+    id: 'ics_' + ev.uid,
+    type: 'program', source: 'ics', emoji: '📅',
+    title: ev.title, venue: ev.location || 'Facebook esemény',
+    date: ev.dt.toLocaleDateString('hu-HU', { month:'long', day:'numeric', weekday:'long' }),
+    time: ev.dt.toTimeString().slice(0,5),
+    description: ev.description || 'Facebook naptáradból importált esemény.',
+    why: 'A Facebook naptáradban szereplő esemény.',
+    tags: ['ics','facebook'], url: ev.url || '#', discount: null, _dt: ev.dt
+  }));
+  state.programs = icsPrograms;
+  document.getElementById('icsStatus').textContent = `✓ ${state.icsEvents.length} esemény betöltve`;
+  document.getElementById('icsStatus').style.color = 'var(--green)';
+  renderPrograms();
+  updateStats();
+}
+
+// Pre-fill FB App ID
+if (state.fbAppId) document.getElementById('fbAppIdInput').value = state.fbAppId;
+
+// Touch close panel on mobile
+document.addEventListener('click', e => {
+  if (window.innerWidth <= 768) {
+    const side = document.getElementById('panelSide');
+    if (side.classList.contains('mobile-visible') && !side.contains(e.target) && !e.target.closest('.mobile-nav')) {
+      mobileSwitchTab('search');
+    }
+  }
+});
+</script>
+</body>
+</html>
