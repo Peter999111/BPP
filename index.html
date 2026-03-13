@@ -1150,38 +1150,25 @@ select.config-input option { background: var(--surface3); }
     <!-- Facebook -->
     <div class="side-panel-content" id="panel-facebook">
       <div class="fb-section">
-        <div class="sources-section-label" style="margin-bottom:10px">Facebook Bejelentkezés</div>
-        <button class="fb-connect-btn" id="fbLoginBtn" onclick="fbLogin()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          Bejelentkezés Facebookkal
-        </button>
-
-        <div class="fb-section">
-          <div class="sources-section-label" style="margin-bottom:6px">FB App ID beállítás</div>
-          <input type="text" class="form-input" id="fbAppIdInput" placeholder="Facebook App ID (pl. 1234567890)" style="margin-bottom:4px">
-          <button class="btn-add" onclick="saveFbAppId()" style="margin-bottom:10px">Mentés</button>
+        <div class="sources-section-label" style="margin-bottom:8px">Nyilvános Budapest események</div>
+        <div style="font-size:0.75rem;color:var(--text2);line-height:1.6;margin-bottom:12px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
+          A keresés automatikusan keresi a nyilvános Facebook eseményeket Budapesten — bejelentkezés nélkül.<br><br>
+          <span style="color:var(--accent)">✦</span> Kattints a <strong>Keresés</strong> gombra és az eredmények között megjelennek a Facebook események is.
         </div>
-
-        <div class="sources-section-label" style="margin-bottom:6px">ICS naptár (Facebookról exportált)</div>
-        <label style="display:block;cursor:pointer">
-          <div style="font-size:0.72rem;color:var(--text3);margin-bottom:6px">Facebook → Események → Naptár exportálás → .ics feltöltés</div>
-          <input type="file" accept=".ics" onchange="loadICS(this)" style="font-size:0.72rem;color:var(--text2);width:100%">
-        </label>
-        <div id="icsStatus" style="font-size:0.72rem;color:var(--text3);margin-top:6px"></div>
       </div>
 
       <div class="fb-section">
-        <div class="sources-section-label">Saját facebook események <span id="myFbEvtCnt" style="color:var(--text3)">(0)</span></div>
+        <div class="sources-section-label">Facebook találatok a keresésből <span id="myFbEvtCnt" style="color:var(--text3)">(0)</span></div>
         <div id="myFbEvents">
-          <div style="font-size:0.72rem;color:var(--text4);font-style:italic">Nincs betöltve.</div>
-        </div>
-      </div>
-
-      <div class="fb-section">
-        <div class="sources-section-label">Budapest ajánlók (nyilvános)</div>
-        <div id="fbPublicEvents">
           <div style="font-size:0.72rem;color:var(--text4);font-style:italic">Keresés után megjelennek.</div>
         </div>
+      </div>
+
+      <div class="fb-section">
+        <div class="sources-section-label" style="margin-bottom:6px">Extra Facebook keresési kulcsszavak</div>
+        <input type="text" class="form-input" id="fbExtraKeywords" placeholder="pl. buli, koncert, kiállítás..." style="margin-bottom:4px">
+        <button class="btn-add" onclick="saveFbKeywords()">Mentés</button>
+        <div style="font-size:0.68rem;color:var(--text4);margin-top:5px">Ezekre is rákeresünk Facebookon a következő keresésnél.</div>
       </div>
     </div>
 
@@ -1347,8 +1334,7 @@ let state = {
     age: '35-50', forWhom: 'parkapcsolat', interests: ['🍷 Borkóstoló','💃 Tánc','🎵 Zene','🖼 Kiállítás'],
     maxResults: 10, focus: 'all', customPrompt: ''
   },
-  fbAppId:       localStorage.getItem('bpd_fbAppId') || '',
-  fbConnected:   false,
+  fbExtraKeywords: localStorage.getItem('bpd_fbKeywords') || '',
   icsEvents:     [],
   fbPublicEvents:[],
   currentFilter: 'all',
@@ -1489,7 +1475,6 @@ function openProfile() {
   document.getElementById('profMaxResults').value = state.profile.maxResults;
   document.getElementById('profFocus').value = state.profile.focus;
   document.getElementById('profCustomPrompt').value = state.profile.customPrompt || '';
-  if (state.fbAppId) document.getElementById('fbAppIdInput').value = state.fbAppId;
   document.getElementById('profileModal').classList.add('active');
 }
 
@@ -1511,92 +1496,20 @@ function saveProfile() {
   closeModal('profileModal');
 }
 
-function saveFbAppId() {
-  const v = document.getElementById('fbAppIdInput').value.trim();
-  state.fbAppId = v;
-  localStorage.setItem('bpd_fbAppId', v);
-  alert(v ? '✓ Facebook App ID mentve!' : 'App ID törölve.');
-}
-
 function closeModal(id) {
   document.getElementById(id).classList.remove('active');
 }
 
-// ═══════════════════════════════════════
-// FACEBOOK LOGIN (Graph API)
-// ═══════════════════════════════════════
-function fbLogin() {
-  if (!state.fbAppId) {
-    alert('Kérlek add meg a Facebook App ID-t a beállításokban!');
-    return;
-  }
-  if (state.fbConnected) {
-    fbFetchMyEvents();
-    return;
-  }
-  // Load FB SDK
-  window.fbAsyncInit = function() {
-    FB.init({ appId: state.fbAppId, cookie: true, xfbml: false, version: 'v19.0' });
-    FB.login(function(response) {
-      if (response.authResponse) {
-        state.fbConnected = true;
-        document.getElementById('fbLoginBtn').textContent = '✓ Kapcsolódva – Események frissítése';
-        document.getElementById('fbLoginBtn').classList.add('connected');
-        fbFetchMyEvents();
-      } else {
-        alert('Facebook bejelentkezés sikertelen.');
-      }
-    }, { scope: 'user_events,public_profile' });
-  };
-  if (!document.getElementById('fb-sdk')) {
-    const s = document.createElement('script');
-    s.id = 'fb-sdk';
-    s.src = 'https://connect.facebook.net/hu_HU/sdk.js';
-    document.head.appendChild(s);
-  } else if (window.FB) {
-    window.fbAsyncInit();
-  }
-}
-
-function fbFetchMyEvents() {
-  if (!window.FB) { alert('FB SDK nem töltődött be.'); return; }
-  const timeFrom = document.getElementById('timeFrom').value;
-  const timeTo   = document.getElementById('timeTo').value;
-  FB.api('/me/events', {
-    fields: 'name,start_time,end_time,place,description,cover',
-    time_filter: 'upcoming',
-    limit: 50
-  }, function(resp) {
-    if (resp.error) { alert('FB API hiba: ' + resp.error.message); return; }
-    const events = (resp.data || []).map(e => ({
-      id: 'fb_' + e.id,
-      type: 'program',
-      source: 'fb',
-      emoji: '📘',
-      title: e.name,
-      venue: e.place ? e.place.name : 'Facebook esemény',
-      date: new Date(e.start_time).toLocaleDateString('hu-HU', { month:'long', day:'numeric', weekday:'long' }),
-      time: new Date(e.start_time).toTimeString().slice(0,5),
-      description: (e.description || '').slice(0, 200),
-      why: 'A saját Facebook esemény-ajánlóidból.',
-      tags: ['facebook','esemény'],
-      url: 'https://facebook.com/events/' + e.id,
-      discount: null
-    }));
-    state.programs = [...state.programs.filter(p => p.source !== 'fb'), ...events];
-    renderMyFbEvents(events);
-    renderPrograms();
-    updateStats();
-    document.getElementById('statFb').textContent = `FB: ${events.length} esemény`;
-    document.getElementById('fbBadge').textContent = events.length;
-    document.getElementById('fbBadge').style.display = events.length ? '' : 'none';
-  });
+function saveFbKeywords() {
+  const v = document.getElementById('fbExtraKeywords').value.trim();
+  localStorage.setItem('bpd_fbKeywords', v);
+  alert(v ? '✓ Kulcsszavak mentve!' : 'Kulcsszavak törölve.');
 }
 
 function renderMyFbEvents(events) {
   const el = document.getElementById('myFbEvents');
   document.getElementById('myFbEvtCnt').textContent = `(${events.length})`;
-  if (!events.length) { el.innerHTML = '<div style="font-size:0.72rem;color:var(--text4);font-style:italic">Nincs közelgő Facebook eseményed.</div>'; return; }
+  if (!events.length) { el.innerHTML = '<div style="font-size:0.72rem;color:var(--text4);font-style:italic">Nincs Facebook találat.</div>'; return; }
   el.innerHTML = events.slice(0,20).map(e => `
     <div class="fb-event-card">
       <div class="fb-event-title">${e.title}</div>
@@ -1753,12 +1666,27 @@ ${dateLines}
 AKTÍV FORRÁSAIM (keresd fel ezeket!):
 ${srcText}
 
-PLUSZ KERESÉSI TAKTIKA — NAGYON FONTOS:
-1. Keress Facebook nyilvános eseményekre: site:facebook.com/events Budapest
-2. Keress hirdetésekre: budapest program "${dates[0]?.slice(0,7) || new Date().toISOString().slice(0,7)}" 
-3. Keress óriásplakát/banner hirdetett eseményekre: budapest kiállítás / fesztivál / workshop
-4. Keress kulturális intézmények saját weboldalain: múzeum, galéria, koncertterem Budapest
-5. Keress Instagramon/TikTokon hivatkozott eseményekre (Google-on keresztül)
+KÖTELEZŐ KERESÉSI LÉPÉSEK — MIND VÉGEZD EL:
+
+FACEBOOK NYILVÁNOS ESEMÉNYEK (ez a legfontosabb!):
+- Keress: site:facebook.com/events Budapest ${dates.map(d=>d.slice(5,7)+'.'+d.slice(8,10)).join(' OR ')}
+- Keress: facebook.com events Budapest "${dates[0]?.slice(0,7)}"
+- Keress: facebook Budapest esemény ${prof.interests.slice(0,3).map(i=>i.replace(/^.\s/,'')).join(' ')} ${dates[0]?.slice(0,7)}
+- Keress FB esemény ajánlókat: "budapest" "esemény" site:facebook.com ${dates[0]?.slice(0,7)}
+${state?.profile?.customPrompt ? `- Extra FB keresés: facebook.com events Budapest ${state.profile.customPrompt}` : ''}
+
+PROGRAM OLDALAK (minden aktív forrást nézz meg!):
+- Jegy.hu, Kultúra.hu, Budapest.hu, Eventim.hu, Funzine.hu, Pestiest.hu aktuális programjai
+- Keress: budapest program ${dates.map(d=>d.slice(5,7)+'.'+d.slice(8,10)).join(' ')} ${timeFrom}-${timeTo}
+
+HIRDETETT ESEMÉNYEK (óriásplakát, banner, online):
+- Keress: budapest kiállítás megnyitó vernisságe ${dates[0]?.slice(0,7)}
+- Keress: budapest koncert workshop tánc ${dates[0]?.slice(0,7)}
+- Keress: budapest fesztivál rendezvény ${dates[0]?.slice(0,7)}
+
+KULTURÁLIS INTÉZMÉNYEK:
+- Budapest múzeumok, galériák, koncerttermek aktuális programjai
+- Magyar Nemzeti Galéria, Müpa, Vígszínház, Akvárium Klub, A38 aktuális műsor
 
 SZŰRÉSI SZABÁLYOK:
 - KIZÁRÓLAG a megadott dátumokra és időintervallumra eső programok
@@ -1870,16 +1798,10 @@ Adj vissza ${prof.maxResults} tételt. CSAK JSON tömb, semmi más szöveg.`;
 }
 
 function renderFbPublicEvents(events) {
-  const el = document.getElementById('fbPublicEvents');
-  el.innerHTML = events.map(e => `
-    <div class="fb-event-card">
-      <div class="fb-event-title">${e.emoji} ${e.title}</div>
-      <div class="fb-event-meta">📍 ${e.venue} · 📅 ${e.date} ${e.time}</div>
-      <div class="fb-event-actions">
-        <a href="${e.url}" target="_blank" class="fb-add-btn">Megnézem →</a>
-        <button class="fb-add-btn" onclick="likeProgram('${e.id}')">♡ Ment</button>
-      </div>
-    </div>`).join('');
+  renderMyFbEvents(events);
+  document.getElementById('statFb').textContent = `FB: ${events.length} esemény`;
+  document.getElementById('fbBadge').textContent = events.length;
+  document.getElementById('fbBadge').style.display = events.length ? '' : 'none';
 }
 
 // ═══════════════════════════════════════
@@ -2119,8 +2041,9 @@ if (storedIcs) {
   updateStats();
 }
 
-// Pre-fill FB App ID
-if (state.fbAppId) document.getElementById('fbAppIdInput').value = state.fbAppId;
+// Init FB keywords
+const storedKw = localStorage.getItem('bpd_fbKeywords');
+if (storedKw) document.getElementById('fbExtraKeywords').value = storedKw;
 
 // Touch close panel on mobile
 document.addEventListener('click', e => {
